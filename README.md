@@ -10,11 +10,11 @@ I recommend making a build directory. This can be wherever you want.
 
 I will just use /home/user/vbuild. Replace user with your user account name.
 
-`mkdir /home/user/vbuild`
-
-`cd /home/user/vbuild`
+`cd /home/user/`
 
 `git clone https://github.com/kercre123/dvcbs.git`
+
+`cd dvcbs`
 
 `chmod +rwx *`
 

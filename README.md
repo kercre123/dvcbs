@@ -10,11 +10,11 @@ I recommend making a build directory. This can be wherever you want.
 
 I will just use /home/user/vbuild. Replace user with your user account name.
 
-`cd /home/user/`
+`mkdir /home/user/vbuild`
+
+`cd /home/user/vbuild`
 
 `git clone https://github.com/kercre123/dvcbs.git`
-
-`cd dvcbs`
 
 `chmod +rwx *`
 
@@ -46,3 +46,6 @@ This is still a full-root script, which means you have to either run `sudo -s` b
 * example when building oskrlatest: `./dvcbs.sh -b 1.8.0 123`
 * example when building in your own dir: `./dvcbs.sh -b 1.8.0 123 otawire`
 * This builds the OTA or apq8009-robot-sysfs.img in the directory you give it. If you don't have a directory, it will try to find the oskrlatest folder.
+
+`-bt {versionbase} {versioncode} {type} {dir}`
+* This builds the OTA or apq8009-robot-sysfs.img in the dirctory you give it, but with a certain build type. whiskey, dev, and oskr are your options.

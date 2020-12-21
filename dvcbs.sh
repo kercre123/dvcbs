@@ -2,28 +2,27 @@
 
 set -e
 
-#resources folder
+#resources folder. if you put a / at the end it will not work
 refo=resources
 
 function help()
 {
-   echo "-h                                         This message"
-   echo "-dm                                        Downloads latest OSKR OTA and mounts it in ./oskrlatest directory."
-   echo "-m {path/to/ota}                           Mounts the OTA provided."
-   echo "-b {versionbase} {versioncode} {dir}       Builds apq8009-robot-sysfs.img in directory provided. If you used -dm, don't put a directory. It will auto detect."
+   echo "-h                                                   This message"
+   echo "-dm                                                  Downloads latest OSKR OTA and mounts it in ./oskrlatest directory."
+   echo "-m {path/to/ota}                                     Mounts the OTA provided."
+   echo "-b {versionbase} {versioncode} {dir}                 Builds apq8009-robot-sysfs.img in directory provided. If you used -dm, don't put a directory. It will auto detect."
+   echo "-bt {versionbase} {versioncode} {type} {dir}         Build apq8009-robot-sysfs.img in directory provided with a specific type. Choice are dev, whiskey, oskr. It will auto detect ./oskrcurrent."
    exit 0
 }
 
 trap ctrl_c INT                                                                 
                                   
 if [ "$EUID" -ne 0 ]
-  then echo "Please run this script as root. You can either run '-s' and then run the script normally, or just run 'sudo ./dvcbs.sh {args}'."
+  then echo "Please run this script as root. You can either run 'sudo -s' and then run the script normally, or just run 'sudo ./dvcbs.sh {args}'."
   exit
 fi
 
-if [ ! -f ${refo}/apq8009-robot-boot.img.gz ]; then
-   echo "./${refo}/apq8009-robot-boot.img.gz doesn't exist. You may not have the resources folder next to the script, or it is corrupted."
-elif [ ! -f ${refo}/ota.pas ]; then
+if [ ! -f ${refo}/ota.pas ]; then
    echo "./${refo}/ota.pas doesn't exist. You may not have the resource folder next to this script, or it is corrupted."
 elif [ ! -f ${refo}/build.prop ]; then
    echo "./${refo}/build.prop doesn't exist. You may not have the resources folder next to this script, or it is corrupted."
@@ -34,15 +33,42 @@ function ctrl_c() {
     exit 1 
 }
 
+function checktype()
+{
+if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_TYPE} == "whiskey" ]; then
+   if [ -z ${BUILD_TYPE} ]; then
+      echo "No build type provided. Using oskr as default."
+      BUILD_TYPE=oskr
+      BUILD_SUFFIX=oskr
+elif [ ${BUILD_TYPE} == "prod" ]; then
+      echo "Prod build type selected. This won't be installable on your prod bot. This will just be versioned as a prod image."
+      #i dont want to do this right now
+      exit 0
+   elif [ ${BUILD_TYPE} == "dev" ]; then
+      echo "Dev build type selected. Note that this won't work on your OSKR bot. Only Anki-unlocked bots. This build won't be signed."
+      BUILD_SUFFIX=d
+   elif [ ${BUILD_TYPE} == "oskr" ]; then
+      echo "OSKR build type selected."
+      BUILD_SUFFIX=oskr
+   elif [ ${BUILD_TYPE} == "whiskey" ]; then
+      echo "Whiskey build type selected. This will work on a dev bot, but rampost may flash a weird dfu causing the back lights to go weird. This is meant for Whiskey DVT1 bots and not normal bots."
+      BUILD_SUFFIX=d
+else
+      echo "Provided build type invalid. Choices: dev, oskr, whiskey"
+      exit 0
+fi
+fi
+}
+
 function checkforandgenkey()
 {
 if [ ! -f ${refo}/private.pem ]; then
-    echo "Private key not found! Generating one for ya..."
+    echo "Private key not found! Generating one..."
     openssl genrsa -out ${refo}/private.pem 2048
     echo "Generated in ${refo}/private.pem. Now getting public key..."
-    openssl rsa -in ${refo}/private.pem -outform PEM -pubout -out ${refo}/public.pem
-    echo "Public key now in ${refo}/public.pem! SCP this to /data/etc/ota_keys in your OSKR bot so he can use this OTA!"
-    echo "Do NOT share your private.pem! Only share your public.pem!"
+    openssl rsa -in ${refo}/private.pem -outform PEM -pubout -out ${refo}/public.pub
+    echo "Public key now in ${refo}/public.pub! SCP this to /data/etc/ota_keys in your OSKR bot so he can use this OTA!"
+    echo "Do NOT share your private.pem! Only share your public.pub!"
 fi
 }
 
@@ -155,21 +181,42 @@ function copyfull()
   echo "Adding base and code to build.prop"
   cp -rp ${refo}/build.prop ${dir}edits/
   echo ro.anki.product.name=Vector >> ${dir}edits/build.prop
-  echo ro.build.version.release=202005190931 >> ${dir}edits/build.prop
+  echo "Setting timestamp"
+  echo ro.build.version.release=202012210131 >> ${dir}edits/build.prop
+  echo ro.build.version.release=202012210131 >> ${dir}edits/etc/timestamp
   echo ro.product.name=Vector >> ${dir}edits/build.prop
   echo ro.revision=project-victor_os >> ${dir}edits/build.prop
   echo ro.anki.version=${base}.${code} >> ${dir}edits/build.prop
   echo ro.anki.victor.version=${base}.${code} >> ${dir}edits/build.prop
-  echo ro.build.fingerprint=${base}.${code}oskr >> ${dir}edits/build.prop
-  echo ro.build.id=${base}.${code}oskr >> ${dir}edits/build.prop
-  echo ro.build.display.id=${base}.${code}d_os${base}.${code} >> ${dir}edits/build.prop
+  echo ro.build.fingerprint=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
+  echo ro.build.id=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
+  echo ro.build.display.id=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
   echo ro.build.type=development >> ${dir}edits/build.prop
   echo ro.build.version.incremental=${code} >> ${dir}edits/build.prop
   echo ro.build.user=custom >> ${dir}edits/build.prop
   echo ${base}.${code} > ${dir}edits/anki/etc/version
-  echo ${base}.${code}oskr > ${dir}edits/etc/os-version
+  echo ${base}.${code}${BUILD_SUFFIX} > ${dir}edits/etc/os-version
   echo ${base} > ${dir}edits/etc/os-version-base
   echo ${code} > ${dir}edits/etc/os-version-code
+  echo "Putting in correct kernel modules"
+  rm -rf ${dir}edits/usr/lib/modules
+  cp -r ${refo}/modules/${BUILD_TYPE}/modules ${dir}edits/usr/lib/
+  chmod -R +rwx ${dir}edits/usr/lib/modules
+  echo "Putting in new update-engine"
+  cp ${refo}/update-engines/${BUILD_TYPE} ${dir}edits/anki/bin/update-engine
+  chmod +rwx ${dir}edits/anki/bin/update-engine
+  if [ ! -f ${dir}edits/anki/bin/vic-log-event ]; then
+     echo "This doesn't contain vic-log-event which is required for update-engine to work. Maybe you are messing with older vicos. Copying it in."
+     cp ${refo}/vic-log-event ${dir}edits/anki/bin/
+     chmod +rwx ${dir}edits/anki/bin/vic-log-event
+  fi
+  if [ ! -f ${dir}edits/anki/etc/update-engine.env ]; then
+     echo "No update-engine.env. This anki folder must be really old! Copying one in."
+     cp ${refo}/update-engine.env ${dir}edits/anki/etc/
+  fi
+  echo "Putting in your key"
+  cp ${refo}/public.pub ${dir}edits/anki/etc/ota.pub
+  cp ${refo}/boots/${BUILD_TYPE}.img.gz ${refo}/apq8009-robot-boot.img.gz
 }
 
 function mountota()
@@ -211,12 +258,21 @@ function buildcustomandsign()
   mv ${dir}final/apq8009-robot-sysfs.img.dec.gz ${dir}/final/apq8009-robot-sysfs.img.gz
   echo "Figuring out SHA256 sum and putting it into manifest."
   sysfssum=$(sha256sum ${dir}tempSign/apq8009-robot-sysfs.img.dec | head -c 64)
-  printf '%s\n' '[META]' 'manifest_version=1.0.0' 'update_version='${base}'.'${code}'oskr' 'ankidev=1' 'num_images=2' 'reboot_after_install=0' '[BOOT]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=12869632' 'sha256=91cb7acb9d97bb7d979a91a3f980a75dbad11f002b013faee0383a8fa588fa67' '[SYSTEM]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=608743424' 'sha256='${sysfssum} >${refo}/manifest.ini
-  echo "Signing manifest.ini"
-  openssl dgst -sha256 -sign ${refo}/private.pem -out ${refo}/manifest.sha256 ${refo}/manifest.ini
+  #echoing would be long so just printf
+  printf '%s\n' '[META]' 'manifest_version=1.0.0' 'update_version='${base}'.'${code}${BUILD_SUFFIX} 'ankidev=1' 'num_images=2' 'reboot_after_install=0' '[BOOT]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=12869632' 'sha256=91cb7acb9d97bb7d979a91a3f980a75dbad11f002b013faee0383a8fa588fa67' '[SYSTEM]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=608743424' 'sha256='${sysfssum} >${refo}/manifest.ini
+  if [ ${BUILD_TYPE} == "oskr" ]; then
+     echo "Signing manifest.ini"
+     openssl dgst -sha256 -sign ${refo}/private.pem -out ${refo}/manifest.sha256 ${refo}/manifest.ini
+  else
+     echo "Not signing because build type is not oskr."
+  fi
   echo "Putting into tar."
   tar -C ${refo} -cvf ${refo}/temp.tar manifest.ini
-  tar -C ${refo} -rf ${refo}/temp.tar manifest.sha256
+  if [ ${BUILD_TYPE} == "oskr" ]; then
+     tar -C ${refo} -rf ${refo}/temp.tar manifest.sha256
+  else
+     echo "Not putting manifest.sha256 in because the build type is not oskr."
+  fi
   tar -C ${refo} -rf ${refo}/temp.tar apq8009-robot-boot.img.gz
   cp ${refo}/temp.tar ${dir}final/
   tar -C ${dir}final -rf ${dir}final/temp.tar apq8009-robot-sysfs.img.gz
@@ -230,6 +286,7 @@ function buildcustomandsign()
   rm -f ${refo}/manifest.sha256
   rm -f ${refo}/temp.tar
   rm -rf ${dir}tempSign
+  rm -r ${refo}/apq8009-robot-boot.img.gz
   mv ${dir}final/${base}.${code}.ota ${dir}
   rm -rf ${dir}final
   echo "Done! Output should be in ${dir}${base}.${code}.ota!"
@@ -255,6 +312,20 @@ if [ $# -gt 0 ]; then
 	    base=$2
 	    code=$3
 	    origdir=$4
+	    BUILD_TYPE=oskr
+	    BUILD_SUFFIX=oskr
+	    precheck
+	    parsedirbuild
+	    copyfull
+	    checkforandgenkey
+	    buildcustomandsign
+	    ;;
+	-bt)
+	    base=$2
+	    code=$3
+	    BUILD_TYPE=$4
+	    origdir=$5
+	    checktype
 	    precheck
 	    parsedirbuild
 	    copyfull

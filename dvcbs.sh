@@ -24,8 +24,10 @@ fi
 
 if [ ! -f ${refo}/ota.pas ]; then
    echo "./${refo}/ota.pas doesn't exist. You may not have the resource folder next to this script, or it is corrupted."
+   exit 0
 elif [ ! -f ${refo}/build.prop ]; then
    echo "./${refo}/build.prop doesn't exist. You may not have the resources folder next to this script, or it is corrupted."
+   exit 0
 fi
                                               
 function ctrl_c() {
@@ -209,13 +211,38 @@ function copyfull()
      echo "This doesn't contain vic-log-event which is required for update-engine to work. Maybe you are messing with older vicos. Copying it in."
      cp ${refo}/vic-log-event ${dir}edits/anki/bin/
      chmod +rwx ${dir}edits/anki/bin/vic-log-event
+     echo "Since that wasn't here, this script will put in an emergency update engine in case the normal one doesn't work. This will be called /anki/bin/basic-update-engine."
+     if [ ${BUILD_TYPE} == "oskr" ]; then
+        echo "This is an oskr build, so signing will be implemented into the basic engine."
+        cp ${refo}/update-engines/basic-oskr-update-engine ${dir}edits/anki/bin/basic-update-engine
+     else
+        echo "This is not an oskr build, so signing will not be implented into the basic update engine."
+        cp ${refo}/update-engines/basic-update-engine ${dir}edits/anki/bin/basic-update-engine
+     fi
+     chmod +rwx ${dir}edits/anki/bin/basic-update-engine
   fi
   if [ ! -f ${dir}edits/anki/etc/update-engine.env ]; then
      echo "No update-engine.env. This anki folder must be really old! Copying one in."
      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
   fi
-  echo "Putting in your key"
+  if [ -d ${dir}edits/etc/ssh ]; then
+     if grep -q "victor" ${dir}edits/etc/ssh/authorized_keys; then
+        echo "This build has a global ssh_root_key, and will not accept an oskr bot specific one. You can get the key here: https://wire.my.to/evresources/ssh_root_key"
+     fi
+  else
+     echo "No ssh in this build. Must be prod or rc."
+  fi
+  echo "Putting in your OTA signing key. Original ota.pub will be left in as a backup as /anki/etc/anki.pub."
+  if [ ! -f ${dir}edits/anki/etc/anki.pub ]; then
+  mv ${dir}edits/anki/etc/ota.pub ${dir}edits/anki/etc/anki.pub
+fi
   cp ${refo}/public.pub ${dir}edits/anki/etc/ota.pub
+  if [ -f ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json ]; then
+    if grep -q "dev" ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json; then
+      echo "There is a dev server config in here. Copying in a prod config."
+      cp ${refo}/server_config.json ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json
+  fi
+fi
   cp ${refo}/boots/${BUILD_TYPE}.img.gz ${refo}/apq8009-robot-boot.img.gz
 }
 
@@ -315,9 +342,9 @@ if [ $# -gt 0 ]; then
 	    BUILD_TYPE=oskr
 	    BUILD_SUFFIX=oskr
 	    precheck
+      checkforandgenkey
 	    parsedirbuild
 	    copyfull
-	    checkforandgenkey
 	    buildcustomandsign
 	    ;;
 	-bt)
@@ -327,9 +354,9 @@ if [ $# -gt 0 ]; then
 	    origdir=$5
 	    checktype
 	    precheck
+      checkforandgenkey
 	    parsedirbuild
 	    copyfull
-	    checkforandgenkey
 	    buildcustomandsign
 	    ;;
 	*)

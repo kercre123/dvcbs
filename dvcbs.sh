@@ -12,6 +12,7 @@ function help()
    echo "-m {path/to/ota}                                     Mounts the OTA provided."
    echo "-b {versionbase} {versioncode} {dir}                 Builds apq8009-robot-sysfs.img in directory provided. If you used -dm, don't put a directory. It will auto detect."
    echo "-bt {versionbase} {versioncode} {type} {dir}         Build apq8009-robot-sysfs.img in directory provided with a specific type. Choice are dev, whiskey, oskr. It will auto detect ./oskrcurrent."
+   echo "-mbt {versionbase} {versioncode} {type} {dir}        Mounts then builds and OTA with type and dir you provided. Type and dir and required."
    exit 0
 }
 
@@ -192,7 +193,7 @@ function copyfull()
   echo ro.anki.victor.version=${base}.${code} >> ${dir}edits/build.prop
   echo ro.build.fingerprint=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
   echo ro.build.id=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
-  echo ro.build.display.id=${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
+  echo ro.build.display.id=v${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
   echo ro.build.type=development >> ${dir}edits/build.prop
   echo ro.build.version.incremental=${code} >> ${dir}edits/build.prop
   echo ro.build.user=custom >> ${dir}edits/build.prop
@@ -359,6 +360,20 @@ if [ $# -gt 0 ]; then
 	    copyfull
 	    buildcustomandsign
 	    ;;
+  -mbt)
+      base=$2
+      code=$3
+      BUILD_TYPE=$4
+      origdir=$5
+      parsedirmount
+      mountota
+      checktype
+      precheck
+      checkforandgenkey
+      parsedirbuild
+      copyfull
+      buildcustomandsign
+      ;;
 	*)
 	    help
 	    ;;

@@ -387,13 +387,6 @@ if [ $# -gt 0 ]; then
       checkforandgenkey
       parsedirbuild
       copyfull
-      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
-      rm -rf ${dir}edits/etc/ssh/authorized_keys
-      cp -r ${refo}/oskrssh/* ${dir}edits/etc/ssh/
-      cp -r ${refo}/localsshuser.sh ${dir}edits/etc/init.d/
-      chmod +rwx ${dir}edits/etc/init.d/localsshuser.sh
-      chmod +rwx ${dir}edits/etc/ssh
-      chmod +rwx ${dir}edits/etc/ssh/*
       echo OSKR > ${dir}edits/robit
       buildcustomandsign
       if [ ! -d all/oskrfinal ]; then
@@ -420,12 +413,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=whiskey
       parsedirmount
       mountota
-      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
-      rm -rf ${dir}edits/etc/ssh/authorized_keys
-      cp -r ${refo}/devssh/* ${dir}edits/etc/ssh/
-      echo Whiskey > ${dir}edits/robit
-      chmod +rwx ${dir}edits/etc/ssh
-      chmod +rwx ${dir}edits/etc/ssh/*
       checktype
       precheck
       checkforandgenkey
@@ -436,12 +423,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=dev
       parsedirmount
       mountota
-      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
-      rm -rf ${dir}edits/etc/ssh/authorized_keys
-      cp -r ${refo}/devssh/* ${dir}edits/etc/ssh/
-      echo Dev > ${dir}edits/robit
-      chmod +rwx ${dir}edits/etc/ssh
-      chmod +rwx ${dir}edits/etc/ssh/*
       checktype
       precheck
       checkforandgenkey
@@ -452,13 +433,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=oskrns
       parsedirmount
       mountota
-      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
-      rm -rf ${dir}edits/etc/ssh/authorized_keys
-      cp -r ${refo}/oskrssh/* ${dir}edits/etc/ssh/
-      cp -r ${refo}/localsshuser.sh ${dir}edits/etc/init.d/
-      chmod +rwx ${dir}edits/etc/init.d/localsshuser.sh
-      chmod +rwx ${dir}edits/etc/ssh
-      chmod +rwx ${dir}edits/etc/ssh/*
       echo OSKRns> ${dir}edits/robit
       checktype
       precheck

@@ -38,3 +38,9 @@ if ! grep -q wire-dev-key "/data/ssh/authorized_keys"; then
   logger -t localsshuser "Adding Wire's key"
   echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBODkupy5BanU472yUCsZQQDsSFOMXGdplsHqfSkZlWilRvyQ63UHiyDvbr6iSw2x4pe+hcSESxUKFbCpXU2ZKLP7OJmkB/Me8vD+2B+HqFEnWC0epl7ccaGL89vZc8EmOXQklleMC3ORfbS9v+J0jQjOmFfGP4yeb1aN2JcogNi9CJfnc0YcXbtOXOnh3E1Al0m723Fy3IXAjqkReNwQKHQmvpM9htCHITMmwUDakdcn8PvEKr0PcsR56YdjQWeRTK7vZLTUBngtfq/tC/EW4jzi4HZKPmQ8g0Cjuk9TWhJ5mUysiC/Cs85KKrUgUz9XyUu+f+X9E2FMg9Tgh8XiX wire-dev-key" >> /data/ssh/authorized_keys
 fi
+
+# ssh_root_key
+if ! grep -q victor-dev@anki "/data/ssh/authorized_keys"; then
+  logger -t localsshuser "Adding ssh_root_key key"
+  echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnzAw9J70s8dQp2caZB3i4+lLUinqixEtQir4pswbDrgVQgmH9qsvNDdaQUyhX3aIY4mq8KDZ12Mu1BL1dWHoiMqNOSI5/yFQrmnmyO5Ug3P/Phw036YW7SaSU5OMtiBBRuKQdx1Ac2iEKKdAsaoJkD2nCel6DzqX3H07dtXxXDu8Jp1XZc6cAlR4II8I/v2J9wtXu2zQgT72Pvvvhm25X+IlJkPuvqxt5Y02NeKb/e4CpSiwKxO7ACImXi2h+OEuTV2XPvfZPxQZtg4TyyL4G8fs6w4qNiS7DdEEDGpUfSqvKXpW43IhinR6G2q7pCnsFaSdR5arNqm/FKW4rlV7t victor-dev@anki" >> /data/ssh/authorized_keys
+fi

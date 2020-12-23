@@ -49,3 +49,6 @@ This is still a full-root script, which means you have to either run `sudo -s` b
 
 `-bt {versionbase} {versioncode} {type} {dir}`
 * This builds the OTA or apq8009-robot-sysfs.img in the dirctory you give it, but with a certain build type. whiskey, dev, and oskr are your options.
+
+`-bf {versionbase} {versioncode} {dir}`
+* Builds an apq8009-robot-sysfs.img for all targets.

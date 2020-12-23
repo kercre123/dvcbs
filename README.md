@@ -6,15 +6,10 @@ This script is an update on my previous script. This one is a lot more automated
 This is a bash script, so you have to run it in a Linux environment.
 
 ## Installation
-I recommend making a build directory. This can be wherever you want. 
-
-I will just use /home/user/vbuild. Replace user with your user account name.
-
-`mkdir /home/user/vbuild`
-
-`cd /home/user/vbuild`
 
 `git clone https://github.com/kercre123/dvcbs.git`
+
+`cd dvcbs`
 
 `chmod +rwx *`
 
@@ -52,3 +47,35 @@ This is still a full-root script, which means you have to either run `sudo -s` b
 
 `-bf {versionbase} {versioncode} {dir}`
 * Builds an apq8009-robot-sysfs.img for all targets.
+
+## Example build
+
+Now that you are in `sudo -s` and you are in the directory with `dvcbs.sh`, you are ready to make a build.
+
+First, lets get the latest OSKR OTA and mount it. run `./dvcbs.sh -dm`
+
+This makes a `./oskrcurrent` directory with a mounted OSKR OTA in it.
+
+Lets cd into it and edit some things.
+
+`cd oskrcurrent/edits/` This puts you at the root of the OTA.
+
+`nano anki/etc/update-engine.env` This puts you in a text editor. Set "UPDATE_ENGINE_ALLOW_DOWNGRADE" to "True".
+
+`cd ../../` This puts you back in the directory with the ./dvcbs.sh script. ../ means previous directory.
+
+Now we can build. `./dvcbs.sh -b 1.8.0 1`
+
+To put the build on your bot, we will need to SCP in the key.
+
+SSH into him and run `mkdir /data/etc/ota_keys`
+
+Get out of SSH and SCP the key into that /data/etc/ota_keys/ folder.
+
+In a separate terminal, run `sudo ifconfig` to find your IP.
+
+Run `cd oskrcurrent && python3 -m http.server`
+
+SSH back into him and run `/anki/bin/update-engine http://computerip:8000/1.8.0.1.ota -v` (replace computerip with the actual computer's ip)
+
+Once it is done, run `reboot`. He will boot into the OTA you just built!

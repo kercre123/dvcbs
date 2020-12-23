@@ -38,7 +38,7 @@ function ctrl_c() {
 
 function checktype()
 {
-if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_TYPE} == "whiskey" ]; then
+if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_TYPE} == "whiskey" ] || [ ! ${BUILD_TYPE} == "oskrns" ]; then
    if [ -z ${BUILD_TYPE} ]; then
       echo "No build type provided. Using oskr as default."
       BUILD_TYPE=oskr
@@ -56,8 +56,11 @@ elif [ ${BUILD_TYPE} == "prod" ]; then
    elif [ ${BUILD_TYPE} == "whiskey" ]; then
       echo "Whiskey build type selected. This will work on a dev bot, but rampost may flash a weird dfu causing the back lights to go weird. This is meant for Whiskey DVT1 bots and not normal bots."
       BUILD_SUFFIX=d
+   elif [ ${BUILD_TYPE} == "oskrns" ]; then
+      echo "OSKR no signing build type selected. This build won't be signed."
+      BUILD_SUFFIX=oskr
 else
-      echo "Provided build type invalid. Choices: dev, oskr, whiskey"
+      echo "Provided build type invalid. Choices: dev, oskr, oskrns, whiskey"
       exit 0
 fi
 fi
@@ -186,7 +189,7 @@ function copyfull()
   echo ro.anki.product.name=Vector >> ${dir}edits/build.prop
   echo "Setting timestamp"
   echo ro.build.version.release=202012210131 >> ${dir}edits/build.prop
-  echo ro.build.version.release=202012210131 >> ${dir}edits/etc/timestamp
+  echo 202012210131 > ${dir}edits/etc/timestamp
   echo ro.product.name=Vector >> ${dir}edits/build.prop
   echo ro.revision=project-victor_os >> ${dir}edits/build.prop
   echo ro.anki.version=${base}.${code} >> ${dir}edits/build.prop
@@ -373,6 +376,97 @@ if [ $# -gt 0 ]; then
       parsedirbuild
       copyfull
       buildcustomandsign
+      ;;
+  -bf)
+      base=$2
+      code=$3
+      origdir=$4
+      BUILD_TYPE=oskr
+      checktype
+      precheck
+      checkforandgenkey
+      parsedirbuild
+      copyfull
+      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
+      rm -rf ${dir}edits/etc/ssh/authorized_keys
+      cp -r ${refo}/oskrssh/* ${dir}edits/etc/ssh/
+      cp -r ${refo}/localsshuser.sh ${dir}edits/etc/init.d/
+      chmod +rwx ${dir}edits/etc/init.d/localsshuser.sh
+      chmod +rwx ${dir}edits/etc/ssh
+      chmod +rwx ${dir}edits/etc/ssh/*
+      echo OSKR > ${dir}edits/robit
+      buildcustomandsign
+      if [ ! -d all/oskrfinal ]; then
+        mkdir -p all/oskrfinal
+      fi
+      if [ ! -d all/whiskeyfinal ]; then
+        mkdir -p all/whiskeyfinal
+      fi
+      if [ ! -d all/devfinal ]; then
+        mkdir -p all/devfinal
+      fi
+      if [ ! -d all/oskrnsfinal ]; then
+        mkdir -p all/oskrnsfinal
+      fi
+      rm -rf all/oskrfinal/*
+      rm -rf all/whiskeyfinal/*
+      rm -rf all/devfinal/*
+      rm -rf all/oskrnsfinal/*
+      cp ${dir}* all/oskrfinal/
+      cp ${dir}* all/whiskeyfinal/
+      cp ${dir}* all/devfinal/
+      cp ${dir}* all/oskrnsfinal/
+      origdir=all/whiskeyfinal/
+      BUILD_TYPE=whiskey
+      parsedirmount
+      mountota
+      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
+      rm -rf ${dir}edits/etc/ssh/authorized_keys
+      cp -r ${refo}/devssh/* ${dir}edits/etc/ssh/
+      echo Whiskey > ${dir}edits/robit
+      chmod +rwx ${dir}edits/etc/ssh
+      chmod +rwx ${dir}edits/etc/ssh/*
+      checktype
+      precheck
+      checkforandgenkey
+      parsedirbuild
+      copyfull
+      buildcustomandsign
+      origdir=all/devfinal/
+      BUILD_TYPE=dev
+      parsedirmount
+      mountota
+      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
+      rm -rf ${dir}edits/etc/ssh/authorized_keys
+      cp -r ${refo}/devssh/* ${dir}edits/etc/ssh/
+      echo Dev > ${dir}edits/robit
+      chmod +rwx ${dir}edits/etc/ssh
+      chmod +rwx ${dir}edits/etc/ssh/*
+      checktype
+      precheck
+      checkforandgenkey
+      parsedirbuild
+      copyfull
+      buildcustomandsign
+      origdir=all/oskrnsfinal/
+      BUILD_TYPE=oskrns
+      parsedirmount
+      mountota
+      rm -rf ${dir}edits/etc/init.d/localsshuser.sh
+      rm -rf ${dir}edits/etc/ssh/authorized_keys
+      cp -r ${refo}/oskrssh/* ${dir}edits/etc/ssh/
+      cp -r ${refo}/localsshuser.sh ${dir}edits/etc/init.d/
+      chmod +rwx ${dir}edits/etc/init.d/localsshuser.sh
+      chmod +rwx ${dir}edits/etc/ssh
+      chmod +rwx ${dir}edits/etc/ssh/*
+      echo OSKRns> ${dir}edits/robit
+      checktype
+      precheck
+      checkforandgenkey
+      parsedirbuild
+      copyfull
+      buildcustomandsign
+      echo "All builds are done. ./all"
       ;;
 	*)
 	    help

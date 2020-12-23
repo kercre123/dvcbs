@@ -71,14 +71,14 @@ fi
 
 function checkforandgenkey()
 {
-if [ ! -f ${keyfo} ]; then
+if [ ! -d ${keyfo} ]; then
     mkdir ${keyfo}
 fi
-if [ ! -f ${refo}/private.pem ]; then
+if [ ! -f ${keyfo}/ota.pub ]; then
     echo "Private key not found! Generating one..."
     openssl genrsa -out ${keyfo}/ota.pem 2048
     echo "Generated in ${keyfo}/ota.pem. Now getting public key..."
-    openssl rsa -in ${refo}/private.pem -outform PEM -pubout -out ${keyfo}/ota.pub
+    openssl rsa -in ${keyfo}/ota.pem -outform PEM -pubout -out ${keyfo}/ota.pub
     echo "Public key now in ${keyfo}/ota.pub! SCP this to /data/etc/ota_keys in your OSKR bot so he can use this OTA!"
     echo "Do NOT share your ota.pem! Only share your ota.pub!"
 fi
@@ -246,7 +246,7 @@ function copyfull()
   if [ ! -f ${dir}edits/anki/etc/anki.pub ]; then
   mv ${dir}edits/anki/etc/ota.pub ${dir}edits/anki/etc/anki.pub
 fi
-  cp ${refo}/public.pub ${dir}edits/anki/etc/ota.pub
+  cp ${keyfo}/ota.pub ${dir}edits/anki/etc/ota.pub
   if [ -f ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json ]; then
     if grep -q "dev" ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json; then
       echo "There is a dev server config in here. Copying in a prod config."
@@ -299,7 +299,7 @@ function buildcustomandsign()
   printf '%s\n' '[META]' 'manifest_version=1.0.0' 'update_version='${base}'.'${code}${BUILD_SUFFIX} 'ankidev=1' 'num_images=2' 'reboot_after_install=0' '[BOOT]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=12869632' 'sha256=91cb7acb9d97bb7d979a91a3f980a75dbad11f002b013faee0383a8fa588fa67' '[SYSTEM]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=608743424' 'sha256='${sysfssum} >${refo}/manifest.ini
   if [ ${BUILD_TYPE} == "oskr" ]; then
      echo "Signing manifest.ini"
-     openssl dgst -sha256 -sign ${refo}/private.pem -out ${refo}/manifest.sha256 ${refo}/manifest.ini
+     openssl dgst -sha256 -sign ${keyfo}/ota.pem -out ${refo}/manifest.sha256 ${refo}/manifest.ini
   else
      echo "Not signing because build type is not oskr."
   fi

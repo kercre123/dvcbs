@@ -5,6 +5,9 @@ set -e
 #resources folder. if you put a / at the end it will not work
 refo=resources
 
+#folder containing keys (ota.pem, ota.pub)
+keyfo=keys
+
 function help()
 {
    echo "-h                                                   This message"
@@ -68,13 +71,16 @@ fi
 
 function checkforandgenkey()
 {
+if [ ! -f ${keyfo} ]; then
+    mkdir ${keyfo}
+fi
 if [ ! -f ${refo}/private.pem ]; then
     echo "Private key not found! Generating one..."
-    openssl genrsa -out ${refo}/private.pem 2048
-    echo "Generated in ${refo}/private.pem. Now getting public key..."
-    openssl rsa -in ${refo}/private.pem -outform PEM -pubout -out ${refo}/public.pub
-    echo "Public key now in ${refo}/public.pub! SCP this to /data/etc/ota_keys in your OSKR bot so he can use this OTA!"
-    echo "Do NOT share your private.pem! Only share your public.pub!"
+    openssl genrsa -out ${keyfo}/ota.pem 2048
+    echo "Generated in ${keyfo}/ota.pem. Now getting public key..."
+    openssl rsa -in ${refo}/private.pem -outform PEM -pubout -out ${keyfo}/ota.pub
+    echo "Public key now in ${keyfo}/ota.pub! SCP this to /data/etc/ota_keys in your OSKR bot so he can use this OTA!"
+    echo "Do NOT share your ota.pem! Only share your ota.pub!"
 fi
 }
 
@@ -105,10 +111,10 @@ function parsedirmount()
 {
 if [ -z "${origdir}" ]; then
     dir=oskrcurrent/
-elif [ -f ${origdir}* ]; then
+elif [ -f `${origdir}*` ]; then
         echo "Dir parsed successfully."
         dir=${origdir}
-elif [ -f ${origdir}/* ]; then
+elif [ -f `${origdir}/*` ]; then
         echo "Dir parsed successfully."
         dir=${origdir}/
 else 
@@ -387,6 +393,9 @@ if [ $# -gt 0 ]; then
       checkforandgenkey
       parsedirbuild
       copyfull
+      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
+      echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskr-stable/ >> ${dir}edits/anki/etc/update-engine.env
+      echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskr-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       echo OSKR > ${dir}edits/robit
       buildcustomandsign
       if [ ! -d all/oskrfinal ]; then
@@ -418,6 +427,9 @@ if [ $# -gt 0 ]; then
       checkforandgenkey
       parsedirbuild
       copyfull
+      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
+      echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/whiskey-stable/ >> ${dir}edits/anki/etc/update-engine.env
+      echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/whiskey-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
       origdir=all/devfinal/
       BUILD_TYPE=dev
@@ -428,6 +440,9 @@ if [ $# -gt 0 ]; then
       checkforandgenkey
       parsedirbuild
       copyfull
+      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
+      echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/dev-stable/ >> ${dir}edits/anki/etc/update-engine.env
+      echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/dev-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
       origdir=all/oskrnsfinal/
       BUILD_TYPE=oskrns
@@ -439,6 +454,9 @@ if [ $# -gt 0 ]; then
       checkforandgenkey
       parsedirbuild
       copyfull
+      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
+      echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskrns-stable/ >> ${dir}edits/anki/etc/update-engine.env
+      echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskrns-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
       echo "All builds are done. ./all"
       ;;

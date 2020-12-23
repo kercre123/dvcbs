@@ -111,10 +111,10 @@ function parsedirmount()
 {
 if [ -z "${origdir}" ]; then
     dir=oskrcurrent/
-elif [ -f `${origdir}*` ]; then
+elif [ -f ${origdir}* ]; then
         echo "Dir parsed successfully."
         dir=${origdir}
-elif [ -f `${origdir}/*` ]; then
+elif [ -f ${origdir}/* ]; then
         echo "Dir parsed successfully."
         dir=${origdir}/
 else 

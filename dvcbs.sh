@@ -13,8 +13,9 @@ buildmonth=`date +"%m"`
 buildday=`date +"%d"`
 buildhour=`date +"%H"`
 buildminute=`date +"%M"`
+buildsecond=`date +"%S"`
 
-builddate=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}
+builddate=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}${buildsecond}
 
 function help()
 {
@@ -54,10 +55,6 @@ if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_
       echo "No build type provided. Using oskr as default."
       BUILD_TYPE=oskr
       BUILD_SUFFIX=oskr
-elif [ ${BUILD_TYPE} == "prod" ]; then
-      echo "Ha ha"
-      #i dont want to do this right now
-      exit 0
    elif [ ${BUILD_TYPE} == "dev" ]; then
       echo "Dev build type selected. Note that this won't work on your OSKR bot. Only Anki-unlocked bots. This build won't be signed."
       BUILD_SUFFIX=d
@@ -119,10 +116,10 @@ function parsedirmount()
 {
 if [ -z "${origdir}" ]; then
     dir=oskrcurrent/
-elif [ -f ${origdir}* ]; then
+elif [ -f ${origdir}*.ota ] || [ -f ${origdir}*.img ]; then
         echo "Dir parsed successfully."
         dir=${origdir}
-elif [ -f ${origdir}/* ]; then
+elif [ -f ${origdir}/*.ota ] || [ -f ${origdir}/*.img ]; then
         echo "Dir parsed successfully."
         dir=${origdir}/
 else 
@@ -438,10 +435,6 @@ if [ $# -gt 0 ]; then
       precheck
       checkforandgenkey
       parsedirbuild
-#for the upload script
-      touch ${dir}version
-      echo base=${base} > ${dir}version
-      echo code=${code} >> ${dir}version
       copyfull
       cp ${refo}/update-engine.env ${dir}edits/anki/etc/
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskr-stable/ >> ${dir}edits/anki/etc/update-engine.env

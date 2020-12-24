@@ -1,16 +1,24 @@
 #!/bin/bash
+# this is wire's script to get otas upload to the server
 
 set -e
 
-# this is wire's script to get otas upload to the server
-SERVER_IP=192.168.1.2
-SERVER_KEY=/thekeyofvictro
+if [ -f .env ]; then
+  export $(cat .env | xargs)
+else
+  touch .env
+  echo "SERVER_IP=" > .env
+  echo "SERVER_KEY=" >> .env
+  echo "wwwroot=" >> .env
+  echo ".env created. Fill it out then run this script again. Don't put a / after wwwroot."
+  exit 0
+fi
+
 sshcommand="ssh -i ${SERVER_KEY} root@${SERVER_IP}"
-wwwroot=/var/www/html
-base=$1
-code=$2
+base=$2
+code=$3
 #unstable, stable, or test
-branch=$3
+branch=$1
 
 if [ ! -f ${SERVER_KEY} ]; then
    echo "no server key found in ${SERVER_KEY}"
@@ -18,7 +26,7 @@ if [ ! -f ${SERVER_KEY} ]; then
 fi
 
 if [ -z ${base} ] || [ -z ${code} ] || [ -z ${branch} ]; then
-   echo "Example use: ./upload 1.8.0 123 stable"
+   echo "Example use: ./upload stable 1.8.0 123"
    exit 0
 fi
 
@@ -64,4 +72,3 @@ if [ -f all/whiskeyfinal/${base}.${code}.ota ] && [ -f all/devfinal/${base}.${co
 else
       echo "The OTAs with the base and code you provided don't exist. You must build with -bf."
 fi
-   

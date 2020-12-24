@@ -236,16 +236,18 @@ function copyfull()
      echo "No update-engine.env. This anki folder must be really old! Copying one in."
      cp ${refo}/update-engine.env ${dir}edits/anki/etc/
   fi
-  if [ -d ${dir}edits/etc/ssh ]; then
+  if [ -f ${dir}edits/etc/ssh/authorized_keys ]; then
      if grep -q "victor" ${dir}edits/etc/ssh/authorized_keys; then
         echo "This build has a global ssh_root_key, and will not accept an oskr bot specific one. You can get the key here: https://wire.my.to/evresources/ssh_root_key"
      fi
   else
-     echo "No ssh in this build. Must be prod or rc."
+     echo "No authorized_keys."
   fi
   echo "Putting in your OTA signing key. Original ota.pub will be left in as a backup as /anki/etc/anki.pub."
   if [ ! -f ${dir}edits/anki/etc/anki.pub ]; then
+    if [ -f ${dir}edits/anki/etc/ota.pub ]; then
   mv ${dir}edits/anki/etc/ota.pub ${dir}edits/anki/etc/anki.pub
+  fi
 fi
   cp ${keyfo}/ota.pub ${dir}edits/anki/etc/ota.pub
   if [ -f ${dir}edits/anki/data/assets/cozmo_resources/config/server_config.json ]; then
@@ -263,6 +265,17 @@ function mountota()
   mv ${dir}*.ota ${dir}latest.tar
   tar -xf ${dir}latest.tar --directory ${dir}
   mkdir ${dir}edits
+  if [ -d ${dir}apps_proc ]; then
+     echo "Woah this is a REALLY old OTA... Mounting anyway. There will probably be no build support for this."
+     mv ${dir}apps_proc/poky/build/tmp-glibc/deploy/images/apq8009-robot-robot/apq8009-robot-sysfs.img.gz ${dir}
+     gzip -d ${dir}apq8009-robot-sysfs.img.gz
+     rm -f ${dir}apq8009-robot-sysfs.img.gz
+     mount -o loop,rw,sync ${dir}apq8009-robot-sysfs.img ${dir}edits
+     rm -rf ${dir}apps_proc
+     rm -rf ${dir}latest.tar
+     echo "Done! You can now mess around (as root) in ${dir}edits/."
+     exit 0
+  fi
   echo "Decrypting"
   openssl enc -d -aes-256-ctr -pass file:${refo}/ota.pas -md md5 -in ${dir}apq8009-robot-sysfs.img.gz -out ${dir}apq8009-robot-sysfs.img.dec.gz
   echo "Decompressing. This may take a minute."
@@ -274,7 +287,7 @@ function mountota()
   echo "Removing tmp files"
   rm ${dir}apq8009-robot-sysfs.img.gz
   rm -f ${dir}latest.tar
-  rm -f ${dir}/manifest.sha256
+  rm -f ${dir}manifest.sha256
   rm -f ${dir}apq8009-robot-boot.img.gz
   rm -f ${dir}manifest.ini
   echo "Done! You can now mess around (as root) in ${dir}edits/."

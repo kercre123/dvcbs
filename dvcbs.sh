@@ -8,6 +8,14 @@ refo=resources
 #folder containing keys (ota.pem, ota.pub)
 keyfo=keys
 
+buildyear=`date +"%Y"`
+buildmonth=`date +"%m"`
+buildday=`date +"%d"`
+buildhour=`date +"%H"`
+buildminute=`date +"%M"`
+
+builddate=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}
+
 function help()
 {
    echo "-h                                                   This message"
@@ -47,7 +55,7 @@ if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_
       BUILD_TYPE=oskr
       BUILD_SUFFIX=oskr
 elif [ ${BUILD_TYPE} == "prod" ]; then
-      echo "Prod build type selected. This won't be installable on your prod bot. This will just be versioned as a prod image."
+      echo "Ha ha"
       #i dont want to do this right now
       exit 0
    elif [ ${BUILD_TYPE} == "dev" ]; then
@@ -190,12 +198,12 @@ function copyfull()
 	mount -o loop,rw,sync ${dir}apq8009-robot-sysfs.img ${dir}edits
   fi
   fi
-  echo "Adding base and code to build.prop"
+  echo "Putting build info into build.prop and /etc"
   cp -rp ${refo}/build.prop ${dir}edits/
   echo ro.anki.product.name=Vector >> ${dir}edits/build.prop
-  echo "Setting timestamp"
-  echo ro.build.version.release=202012210131 >> ${dir}edits/build.prop
-  echo 202012210131 > ${dir}edits/etc/timestamp
+  echo ro.build.version.release=${builddate} >> ${dir}edits/build.prop
+  echo ${builddate} > ${dir}edits/etc/timestamp
+  echo ${builddate} > ${dir}edits/etc/version
   echo ro.product.name=Vector >> ${dir}edits/build.prop
   echo ro.revision=project-victor_os >> ${dir}edits/build.prop
   echo ro.anki.version=${base}.${code} >> ${dir}edits/build.prop
@@ -207,6 +215,27 @@ function copyfull()
   echo ro.build.version.incremental=${code} >> ${dir}edits/build.prop
   echo ro.build.user=root >> ${dir}edits/build.prop
   echo ro.build.custom.target=${BUILD_TYPE} >> ${dir}edits/build.prop
+  if [ ${BUILD_TYPE} == oskr ]; then
+     echo ID="msm-perf" > ${dir}edits/etc/os-release
+     echo NAME="msm-perf" >> ${dir}edits/etc/os-release
+     echo VERSION="${builddate}" >> ${dir}edits/etc/os-release
+     echo VERSION_ID="${builddate}" >> ${dir}edits/etc/os-release
+     echo PRETTY_NAME="msm-perf ${builddate}" >> ${dir}edits/etc/os-release
+     echo "msm-perf ${builddate} \n \l" > ${dir}edits/etc/issue
+     echo " " >> ${dir}edits/etc/issue
+     echo "msm-perf ${builddate} %h" > ${dir}edits/etc/issue.net
+     echo " " >> ${dir}edits/etc/issue.net
+  else
+     echo ID="msm" > ${dir}edits/etc/os-release
+     echo NAME="msm" >> ${dir}edits/etc/os-release
+     echo VERSION="${builddate}" >> ${dir}edits/etc/os-release
+     echo VERSION_ID="${builddate}" >> ${dir}edits/etc/os-release
+     echo PRETTY_NAME="msm ${builddate}" >> ${dir}edits/etc/os-release
+     echo "msm ${builddate} \n \l" > ${dir}edits/etc/issue
+     echo " " >> ${dir}edits/etc/issue
+     echo "msm ${builddate} %h" > ${dir}edits/etc/issue.net
+     echo " " >> ${dir}edits/etc/issue.net
+  fi
   echo ${base}.${code} > ${dir}edits/anki/etc/version
   echo ${base}.${code}${BUILD_SUFFIX} > ${dir}edits/etc/os-version
   echo ${base} > ${dir}edits/etc/os-version-base
@@ -266,7 +295,7 @@ function mountota()
   tar -xf ${dir}latest.tar --directory ${dir}
   mkdir ${dir}edits
   if [ -d ${dir}apps_proc ]; then
-     echo "Woah this is a REALLY old OTA... Mounting anyway. There will probably be no build support for this."
+     echo "Woah this is a REALLY old OTA... Mounting anyway. This could actually work on your robot, but I don't guarantee it."
      mv ${dir}apps_proc/poky/build/tmp-glibc/deploy/images/apq8009-robot-robot/apq8009-robot-sysfs.img.gz ${dir}
      gzip -d ${dir}apq8009-robot-sysfs.img.gz
      rm -f ${dir}apq8009-robot-sysfs.img.gz
@@ -398,10 +427,16 @@ if [ $# -gt 0 ]; then
       buildcustomandsign
       ;;
   -bf)
+      #wire's command
+      echo "This is the command used by Wire to build OTAs. It is recommended you use the -b or -bt command as this builds the OTA you provide for every single target."
       base=$2
       code=$3
       origdir=$4
       BUILD_TYPE=oskr
+#for the upload script
+      touch ${dir}version
+      echo base=${base} > ${dir}version
+      echo code=${code} >> ${dir}version
       checktype
       precheck
       checkforandgenkey
@@ -472,8 +507,6 @@ if [ $# -gt 0 ]; then
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskrns-stable/ >> ${dir}edits/anki/etc/update-engine.env
       echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskrns-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
-      touch ${dir}version
-      echo ${base}.${code} > ${dir}version
       echo "All builds are done. ./all"
       ;;
 	*)

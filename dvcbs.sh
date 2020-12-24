@@ -472,6 +472,8 @@ if [ $# -gt 0 ]; then
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskrns-stable/ >> ${dir}edits/anki/etc/update-engine.env
       echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskrns-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
+      touch ${dir}version
+      echo ${base}.${code} > ${dir}version
       echo "All builds are done. ./all"
       ;;
 	*)

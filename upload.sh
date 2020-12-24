@@ -22,9 +22,13 @@ if [ -z ${base} ] || [ -z ${code} ] || [ -z ${branch} ]; then
    exit 0
 fi
 
-if [ ! ${branch} == "test" ] || [ ! ${branch} == "stable" ] || [ ! ${branch} == "unstable" ]; then
+if [ ! ${branch} == stable ]; then
+if [ ! ${branch} == unstable ]; then
+if [ ! ${branch} == test ]; then
    echo "Branch invalid. Choices are: stable, unstable, test."
    exit 0
+fi
+fi
 fi
 
 echo "${base}.${code}.ota will be SCPed to root@${SERVER_IP} with ${SERVER_KEY} if it exists"

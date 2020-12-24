@@ -205,7 +205,8 @@ function copyfull()
   echo ro.build.display.id=v${base}.${code}${BUILD_SUFFIX} >> ${dir}edits/build.prop
   echo ro.build.type=development >> ${dir}edits/build.prop
   echo ro.build.version.incremental=${code} >> ${dir}edits/build.prop
-  echo ro.build.user=custom >> ${dir}edits/build.prop
+  echo ro.build.user=root >> ${dir}edits/build.prop
+  echo ro.build.custom.target=${BUILD_TYPE} >> ${dir}edits/build.prop
   echo ${base}.${code} > ${dir}edits/anki/etc/version
   echo ${base}.${code}${BUILD_SUFFIX} > ${dir}edits/etc/os-version
   echo ${base} > ${dir}edits/etc/os-version-base

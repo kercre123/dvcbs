@@ -428,19 +428,20 @@ if [ $# -gt 0 ]; then
       ;;
   -bf)
       #wire's command
+      # TODO: copy robot image instead of full ota to each folder. it would be a little more messy down here but it would save time.
       echo "This is the command used by Wire to build OTAs. It is recommended you use the -b or -bt command as this builds the OTA you provide for every single target."
       base=$2
       code=$3
       origdir=$4
       BUILD_TYPE=oskr
-#for the upload script
-      touch ${dir}version
-      echo base=${base} > ${dir}version
-      echo code=${code} >> ${dir}version
       checktype
       precheck
       checkforandgenkey
       parsedirbuild
+#for the upload script
+      touch ${dir}version
+      echo base=${base} > ${dir}version
+      echo code=${code} >> ${dir}version
       copyfull
       cp ${refo}/update-engine.env ${dir}edits/anki/etc/
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskr-stable/ >> ${dir}edits/anki/etc/update-engine.env

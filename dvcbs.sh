@@ -15,7 +15,9 @@ buildhour=`date +"%H"`
 buildminute=`date +"%M"`
 buildsecond=`date +"%S"`
 
-builddate=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}${buildsecond}
+builddatefull=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}${buildsecond}
+
+builddate=${buildyear}${buildmonth}${buildday}${buildhour}
 
 function help()
 {
@@ -199,7 +201,7 @@ function copyfull()
   cp -rp ${refo}/build.prop ${dir}edits/
   echo ro.anki.product.name=Vector >> ${dir}edits/build.prop
   echo ro.build.version.release=${builddate} >> ${dir}edits/build.prop
-  echo ${builddate} > ${dir}edits/etc/timestamp
+  echo ${builddatefull} > ${dir}edits/etc/timestamp
   echo ${builddate} > ${dir}edits/etc/version
   echo ro.product.name=Vector >> ${dir}edits/build.prop
   echo ro.revision=project-victor_os >> ${dir}edits/build.prop

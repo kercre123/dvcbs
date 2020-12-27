@@ -325,11 +325,12 @@ function buildcustomandsign()
 {
   echo "Compressing. This may take a minute."
   umount ${dir}edits
+  sysfsbytes=`du -b ${dir}apq8009-robot-sysfs.img | awk '{print $1;}'`
   gzip -k ${dir}apq8009-robot-sysfs.img
   mkdir ${dir}final
   echo "Encrypting"
   openssl enc -e -aes-256-ctr -pass file:${refo}/ota.pas -md md5 -in ${dir}apq8009-robot-sysfs.img.gz -out ${dir}final/apq8009-robot-sysfs.img.dec.gz
-  mkdir ${dir}tempSign
+  mkdir -p ${dir}tempSign
   cp ${dir}final/apq8009-robot-sysfs.img.dec.gz ${dir}tempSign/apq8009-robot-sysfs.img.gz
   echo "Decrypting into temp directory to get correct hash"
   openssl enc -d -aes-256-ctr -pass file:${refo}/ota.pas -md md5 -in ${dir}tempSign/apq8009-robot-sysfs.img.gz -out ${dir}tempSign/apq8009-robot-sysfs.img.dec.gz
@@ -337,8 +338,14 @@ function buildcustomandsign()
   mv ${dir}final/apq8009-robot-sysfs.img.dec.gz ${dir}/final/apq8009-robot-sysfs.img.gz
   echo "Figuring out SHA256 sum and putting it into manifest."
   sysfssum=$(sha256sum ${dir}tempSign/apq8009-robot-sysfs.img.dec | head -c 64)
+  mkdir -p ${refo}/tempBoot
+  cp ${refo}/apq8009-robot-boot.img.gz ${refo}/tempBoot/
+  openssl enc -d -aes-256-ctr -pass file:${refo}/ota.pas -md md5 -in ${refo}/tempBoot/apq8009-robot-boot.img.gz -out ${refo}/tempBoot/apq8009-robot-boot.img.dec.gz
+  gzip -d ${refo}/tempBoot/apq8009-robot-boot.img.dec.gz
+  bootbytes=$(du -b ${refo}/tempBoot/apq8009-robot-boot.img.dec | awk '{print $1;}')
+  bootsha=$(sha256sum ${refo}/tempBoot/apq8009-robot-boot.img.dec | head -c 64)
   #echoing would be long so just printf
-  printf '%s\n' '[META]' 'manifest_version=1.0.0' 'update_version='${base}'.'${code}${BUILD_SUFFIX} 'ankidev=1' 'num_images=2' 'reboot_after_install=0' '[BOOT]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=12869632' 'sha256=91cb7acb9d97bb7d979a91a3f980a75dbad11f002b013faee0383a8fa588fa67' '[SYSTEM]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes=608743424' 'sha256='${sysfssum} >${refo}/manifest.ini
+  printf '%s\n' '[META]' 'manifest_version=1.0.0' 'update_version='${base}'.'${code}${BUILD_SUFFIX} 'ankidev=1' 'num_images=2' 'reboot_after_install=0' '[BOOT]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes='${bootbytes} 'sha256='${bootsha} '[SYSTEM]' 'encryption=1' 'delta=0' 'compression=gz' 'wbits=31' 'bytes='${sysfsbytes} 'sha256='${sysfssum} >${refo}/manifest.ini
   if [ ${BUILD_TYPE} == "oskr" ]; then
      echo "Signing manifest.ini"
      openssl dgst -sha256 -sign ${keyfo}/ota.pem -out ${refo}/manifest.sha256 ${refo}/manifest.ini
@@ -365,6 +372,7 @@ function buildcustomandsign()
   rm -f ${refo}/manifest.sha256
   rm -f ${refo}/temp.tar
   rm -rf ${dir}tempSign
+  rm -rf ${refo}/tempBoot
   rm -r ${refo}/apq8009-robot-boot.img.gz
   mv ${dir}final/${base}.${code}.ota ${dir}
   rm -rf ${dir}final
@@ -467,6 +475,7 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=whiskey
       parsedirmount
       mountota
+      echo Whiskey > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey
@@ -480,6 +489,7 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=dev
       parsedirmount
       mountota
+      echo Dev > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey
@@ -493,7 +503,7 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=oskrns
       parsedirmount
       mountota
-      echo OSKRns> ${dir}edits/robit
+      echo OSKRns > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey

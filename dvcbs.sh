@@ -17,7 +17,7 @@ buildsecond=`date +"%S"`
 
 builddatefull=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}${buildsecond}
 
-builddate=${buildyear}${buildmonth}${buildday}${buildhour}
+builddate=${buildyear}${buildmonth}${buildday}${buildhour}${buildminute}
 
 function help()
 {
@@ -449,7 +449,6 @@ if [ $# -gt 0 ]; then
       cp ${refo}/update-engine.env ${dir}edits/anki/etc/
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskr-stable/ >> ${dir}edits/anki/etc/update-engine.env
       echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskr-unstable/ >> ${dir}edits/anki/etc/update-engine.env
-      echo OSKR > ${dir}edits/robit
       buildcustomandsign
       if [ ! -d all/oskrfinal ]; then
         mkdir -p all/oskrfinal
@@ -475,7 +474,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=whiskey
       parsedirmount
       mountota
-      echo Whiskey > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey
@@ -489,7 +487,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=dev
       parsedirmount
       mountota
-      echo Dev > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey
@@ -503,7 +500,6 @@ if [ $# -gt 0 ]; then
       BUILD_TYPE=oskrns
       parsedirmount
       mountota
-      echo OSKRns > ${dir}edits/robit
       checktype
       precheck
       checkforandgenkey

@@ -250,15 +250,6 @@ function copyfull()
      echo "This doesn't contain vic-log-event which is required for update-engine to work. Maybe you are messing with older vicos. Copying it in."
      cp ${refo}/vic-log-event ${dir}edits/anki/bin/
      chmod +rwx ${dir}edits/anki/bin/vic-log-event
-     echo "Since that wasn't here, this script will put in an emergency update engine in case the normal one doesn't work. This will be called /anki/bin/basic-update-engine."
-     if [ ${BUILD_TYPE} == "oskr" ]; then
-        echo "This is an oskr build, so signing will be implemented into the basic engine."
-        cp ${refo}/update-engines/basic-oskr-update-engine ${dir}edits/anki/bin/basic-update-engine
-     else
-        echo "This is not an oskr build, so signing will not be implented into the basic update engine."
-        cp ${refo}/update-engines/basic-update-engine ${dir}edits/anki/bin/basic-update-engine
-     fi
-     chmod +rwx ${dir}edits/anki/bin/basic-update-engine
   fi
   if [ ! -f ${dir}edits/anki/etc/update-engine.env ]; then
      echo "No update-engine.env. This anki folder must be really old! Copying one in."

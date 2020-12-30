@@ -426,12 +426,17 @@ if [ $# -gt 0 ]; then
       ;;
   -bf)
       #wire's command
-      # TODO: copy robot image instead of full ota to each folder. it would be a little more messy down here but it would save time.
+      # TODO: copy robot image instead of full ota to each folder. it may be a little more messy down here but it would save time.
       echo "This is the command used by Wire to build OTAs. It is recommended you use the -b or -bt command as this builds the OTA you provide for every single target."
       base=$2
       code=$3
       origdir=$4
       BUILD_TYPE=oskr
+      branch=$5
+      if [ -z ${branch} ]; then
+         echo "Provide a branch; test, unstable, stable"
+         exit 0
+      fi
       checktype
       precheck
       checkforandgenkey
@@ -441,6 +446,22 @@ if [ $# -gt 0 ]; then
       echo UPDATE_ENGINE_BASE_URL=http://wire.my.to:81/oskr-stable/ >> ${dir}edits/anki/etc/update-engine.env
       echo UPDATE_ENGINE_BASE_URL_LATEST=http://wire.my.to:81/oskr-unstable/ >> ${dir}edits/anki/etc/update-engine.env
       buildcustomandsign
+      echo "Doing versioning stuff for ./upload.sh"
+      if [ ${branch} == stable ]; then
+      if [ -f ${dir}version ]; then
+        if [ -f ${dir}lastversion ]; then
+          rm -f ${dir}lastversion
+        fi
+        mv ${dir}version ${dir}lastversion
+        sed -i 's/currentbase/lastbase/g' ${dir}lastversion
+        sed -i 's/currentcode/lastcode/g' ${dir}lastversion
+      fi
+        echo "Echoing base and code to ${dir}version"
+        echo currentbase=${base} > ${dir}version
+        echo currentcode=${code} >> ${dir}version
+      fi
+      echo currentbase=${base} > ${dir}version
+      echo currentcode=${code} >> ${dir}version
       if [ ! -d all/oskrfinal ]; then
         mkdir -p all/oskrfinal
       fi
@@ -457,10 +478,10 @@ if [ $# -gt 0 ]; then
       rm -rf all/whiskeyfinal/*
       rm -rf all/devfinal/*
       rm -rf all/oskrnsfinal/*
-      cp ${dir}* all/oskrfinal/
-      cp ${dir}* all/whiskeyfinal/
-      cp ${dir}* all/devfinal/
-      cp ${dir}* all/oskrnsfinal/
+      cp ${dir}*.ota all/oskrfinal/
+      cp ${dir}*.ota all/whiskeyfinal/
+      cp ${dir}*.ota all/devfinal/
+      cp ${dir}*.ota all/oskrnsfinal/
       origdir=all/whiskeyfinal/
       BUILD_TYPE=whiskey
       parsedirmount

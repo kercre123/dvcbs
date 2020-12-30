@@ -460,8 +460,8 @@ if [ $# -gt 0 ]; then
         echo currentbase=${base} > ${dir}version
         echo currentcode=${code} >> ${dir}version
       fi
-      echo currentbase=${base} > ${dir}version
-      echo currentcode=${code} >> ${dir}version
+      #echo currentbase=${base} > ${dir}version
+      #echo currentcode=${code} >> ${dir}version
       if [ ! -d all/oskrfinal ]; then
         mkdir -p all/oskrfinal
       fi

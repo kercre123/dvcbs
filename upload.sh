@@ -72,7 +72,17 @@ if [ -f all/whiskeyfinal/${base}.${code}.ota ] && [ -f all/devfinal/${base}.${co
                ${sshcommand} "ln -s ${wwwroot}/dev-${branch}/latest.ota ${wwwroot}/dev-${branch}/diff/${lastbase}.${lastcode}.ota"
             fi
          fi
-      fi       
+      fi
+# changelog
+      if [ ! ${branch} == test ]; then
+         ${sshcommand} "echo '<h2>${base}.${code}</h2>' > ${wwwroot}/oskr-stable/changelog-temp"
+         ${sshcommand} "echo '<p>put stuff here</p>' >> ${wwwroot}/oskr-stable/changelog-temp"
+         ${sshcommand} "echo '<hr>' >> ${wwwroot}/oskr-stable/changelog-temp"
+         ${sshcommand} "cp ${wwwroot}/oskr-stable/changelog.html ${wwwroot}/oskr-stable/changelog.html-backup"
+         ${sshcommand} 'echo $(cat /var/www/html/oskr-stable/changelog.html-backup) >> /var/www/html/oskr-stable/changelog-temp'
+         ${sshcommand} "mv ${wwwroot}/oskr-stable/changelog-temp ${wwwroot}/oskr-stable/changelog.html"
+         ssh -i ${SERVER_KEY} -t root@${SERVER_IP} "nano /var/www/html/oskr-stable/changelog.html; exec \$SHELL -l && logout"
+     fi
 else
       echo "The OTAs with the base and code you provided don't exist. You must build with -bf."
 fi

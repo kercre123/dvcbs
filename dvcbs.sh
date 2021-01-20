@@ -52,7 +52,7 @@ function ctrl_c() {
 
 function checktype()
 {
-if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_TYPE} == "whiskey" ] || [ ! ${BUILD_TYPE} == "oskrns" ]; then
+if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_TYPE} == "whiskey" ] || [ ! ${BUILD_TYPE} == "oskrns" ] || [ ! ${BUILD_TYPE} == "orange" ]; then
    if [ -z ${BUILD_TYPE} ]; then
       echo "No build type provided. Using oskr as default."
       BUILD_TYPE=oskr
@@ -69,8 +69,11 @@ if [ ! ${BUILD_TYPE} == "dev" ] || [ ! ${BUILD_TYPE} == "oskr" ] || [ ! ${BUILD_
    elif [ ${BUILD_TYPE} == "oskrns" ]; then
       echo "OSKR no signing build type selected. This build won't be signed."
       BUILD_SUFFIX=oskr
+   elif [ ${BUILD_TYPE} == "orange" ]; then
+      BUILD_SUFFIX=d
+      echo "Orange-boot build type selected. This build won't be signed, and is recommended to be used with DVT3/4."
 else
-      echo "Provided build type invalid. Choices: dev, oskr, oskrns, whiskey"
+      echo "Provided build type invalid. Choices: dev, oskr, oskrns, whiskey, orange"
       exit 0
 fi
 fi
@@ -196,6 +199,12 @@ function copyfull()
 	mkdir ${dir}edits
 	mount -o loop,rw,sync ${dir}apq8009-robot-sysfs.img ${dir}edits
   fi
+  fi
+  if grep -q "cryptsetup" ${dir}edits/etc/initscripts/mount-data; then
+     if [ ${BUILD_TYPE} == "orange" ]; then
+        echo "This initscript contains cryptsetup, but this kernel doesn't support that. Exiting."
+        exit 0
+     fi
   fi
   echo "Putting build info into build.prop and /etc"
   cp -rp ${refo}/build.prop ${dir}edits/

@@ -75,7 +75,7 @@ if [ -f all/whiskeyfinal/${base}.${code}.ota ] && [ -f all/devfinal/${base}.${co
       fi
 # changelog
       if [ ! ${branch} == test ]; then
-         ${sshcommand} "echo '<h2>${base}.${code}</h2>' > ${wwwroot}/oskr-stable/changelog-temp"
+         ${sshcommand} "echo '<h2>${base}.${code} ${branch}</h2>' > ${wwwroot}/oskr-stable/changelog-temp"
          ${sshcommand} "echo '<p>put stuff here</p>' >> ${wwwroot}/oskr-stable/changelog-temp"
          ${sshcommand} "echo '<hr>' >> ${wwwroot}/oskr-stable/changelog-temp"
          ${sshcommand} "cp ${wwwroot}/oskr-stable/changelog.html ${wwwroot}/oskr-stable/changelog.html-backup"
